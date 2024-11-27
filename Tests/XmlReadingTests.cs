@@ -32,32 +32,15 @@ namespace Tests
         [Test]
         public void StyleParse()
         {
-            var html  = Utility.ReadString("html.html");
-            var doc   = XDocument.Parse(html);
-            var style = doc.Descendants("style").First().Value;
+            CssClass clss =
+                Utility.ReadString("html.html")
+                   .Pipe(XDocument.Parse)
+                   .Apply(it => it.Descendants("style").First().Value)
+                   .Pipe(TrimStart).Pipe(GetClass).value;
 
-            string clssName = "";
-            var    props    = new List<CssProp>();
-
-            style.Pipe(TrimStart).Pipe(GetClassName)
-               .Inject(opt => clssName = opt.value)
-               .remaining.Pipe(TrimStart).Pipe(GetScope)
-               .Inject(opt =>
-                {
-                    var src = opt.value;
-                    for (;;)
-                    {
-                        var x = src.Pipe(TrimStart).Pipe(GetProperty);
-                        if (x.isRejected) break;
-                        props.Add(x.value);
-                        src = x.remaining;
-                    }
-                })
-                ;
-
-            Debug.Log(clssName);
-            props.ForEach(p => Debug.Log(p));
-            Assert.That(clssName, Is.Not.Empty);
+            Debug.Log(clss.name);
+            clss.props.Iter(p => Debug.Log(p));
+            Assert.That(clss.name, Is.Not.Empty);
         }
     }
 }

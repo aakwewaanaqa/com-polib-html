@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -31,15 +32,15 @@ namespace Parsings
             var remaining = src.Remove(0, match.Length);
             return new Output<string>
             {
-                value = value,
+                value     = value,
                 remaining = remaining
             };
         };
 
         public static readonly Func<string, Output<CssProp>> GetProperty = src =>
         {
-            var regex   = new Regex(@"^([A-Za-z]+)\:([^:;]+)\;");
-            var match   = regex.Match(src);
+            var regex = new Regex(@"^([A-Za-z]+)\:([^:;]+)\;");
+            var match = regex.Match(src);
             if (!match.Success) return Output<CssProp>.Fail(src);
             var name      = match.Groups[1].Value;
             var value     = match.Groups[2].Value.Trim();
@@ -56,6 +57,35 @@ namespace Parsings
             };
         };
 
+        public static readonly Func<string, Output<CssClass>> GetClass = src =>
+        {
+            var name  = string.Empty;
+            var props = new List<CssProp>();
+            var clss = src.Pipe(GetClassName).Inject(n => name = n.value)
+               .remaining.Pipe(TrimStart).Pipe(GetScope).Inject(scope =>
+                {
+                    var rest = scope.value.Pipe(TrimStart);
+                    for (;;)
+                    {
+                        var prop = rest.Pipe(GetProperty);
+                        if (prop.isRejected) break;
+                        props.Add(prop.value);
+                        rest = prop.remaining.Pipe(TrimStart);
+                    }
+                });
+            var isRejected = clss.isRejected;
+            return new Output<CssClass>
+            {
+                isRejected = isRejected,
+                remaining = isRejected ? src : clss.remaining,
+                value = isRejected ? default : new CssClass
+                {
+                    name  = name,
+                    props = props,
+                }
+            };
+        };
+
         private static string Escape(this string src)
         {
             var regex = new Regex(@"[\x00-\x1F\x7F]");
@@ -65,6 +95,11 @@ namespace Parsings
 
     public static class FuncExts
     {
+        public static B Apply<A, B>(this A a, Func<A, B> func)
+        {
+            return func(a);
+        }
+
         public static Func<A, B> Inject<A, B>(this Func<A, B> p, Action<B> i)
         {
             return a =>

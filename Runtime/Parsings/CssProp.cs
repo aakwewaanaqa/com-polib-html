@@ -3,7 +3,7 @@ namespace Parsings
     public struct CssProp
     {
         public string name;
-        public object value;
+        public string value;
 
         public override string ToString()
         {
