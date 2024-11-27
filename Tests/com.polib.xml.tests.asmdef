@@ -1,0 +1,23 @@
+{
+    "name": "com.polib.xml.tests",
+    "rootNamespace": "",
+    "references": [
+        "com.polib.html.parsing"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "JetBrains.Rider.PathLocator.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
